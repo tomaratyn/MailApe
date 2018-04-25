@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Your Mailing Lists
+{% endblock %}
+
+{% block body %}
+  <div class="row user-mailing-lists" >
+    <div class="col-sm-12" >
+      <h1 >Your Mailing Lists</h1 >
+      <div >
+        <a class="btn btn-primary"
+           href="{% url "mailinglist:create_mailinglist" %}" >New List</a >
+      </div >
+      <p > Your mailing lists:</p >
+      <ul class="mailing-list-list">
+        {% for mailinglist in mailinglist_list %}
+          <li class="mailinglist-item">
+            <a href="{% url "mailinglist:manage_mailinglist" pk=mailinglist.id %}" >
+              {{ mailinglist.name }}
+            </a >
+          </li >
+        {% endfor %}
+      </ul >
+    </div >
+  </div >
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Confirm delete {{ mailinglist.name }}
+{% endblock %}
+
+{% block body %}
+  <h1 >Confirm Delete?</h1 >
+  <form action="" method="post" >
+    {% csrf_token %}
+    <p >Are you sure you want to delete {{ mailinglist.name }}?</p >
+    <input type="submit" value="Yes" class="btn btn-danger btn-sm ">
+    <a class="btn btn-primary btn-lg" href="{% url "mailinglist:manage_mailinglist" pk=mailinglist.id %}">No</a>
+  </form >
+{% endblock %}
