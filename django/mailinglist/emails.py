@@ -1,9 +1,13 @@
+import logging
 from datetime import datetime
+from smtplib import SMTPServerDisconnected
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template import engines, Context
 from django.urls import reverse
+
+logger = logging.getLogger(__name__)
 
 CONFIRM_SUBSCRIPTION_HTML = 'mailinglist/email/confirmation.html'
 
@@ -39,6 +43,7 @@ class EmailTemplateContext(Context):
 
 
 def send_confirmation_email(subscriber):
+    logger.info("in send_confirmation_email. About to send email.")
     mailing_list = subscriber.mailing_list
     confirmation_link = EmailTemplateContext.make_link(
         reverse('mailinglist:confirm_subscription',
@@ -55,12 +60,17 @@ def send_confirmation_email(subscriber):
     html_body_template = dt_engine.get_template(CONFIRM_SUBSCRIPTION_HTML)
     html_body = html_body_template.render(context=context)
 
-    send_mail(
-        subject=subject,
-        message=text_body,
-        from_email=settings.MAILING_LIST_FROM_EMAIL,
-        recipient_list=(subscriber.email,),
-        html_message=html_body)
+    try:
+        send_mail(
+            subject=subject,
+            message=text_body,
+            from_email=settings.MAILING_LIST_FROM_EMAIL,
+            recipient_list=(subscriber.email,),
+            html_message=html_body)
+    except SMTPServerDisconnected as e:
+        logger.error('sendmail raised an SMTPServerDisconnected %r %s' % (e, e))
+    except Exception as e:
+        logger.error('sendmail raised generic exception %r %s' % (e, e))
 
 
 def send_subscriber_message(subscriber_message):

@@ -1,0 +1,5 @@
+-r requirements.common.txt
+celery[sqs]
+boto3
+pycurl
+psycopg2-binary

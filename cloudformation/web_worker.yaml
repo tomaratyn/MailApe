@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Mail Ape web worker
+Parameters:
+  WorkerAMI:
+    Description: Worker AMI
+    Type: String
+  InstanceProfile:
+    Description: the instance profile
+    Type: String
+Resources:
+  LoadBalancer:
+    Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+    Properties:
+      LoadBalancerName: MailApeLB
+      AvailabilityZones:
+        Fn::GetAZs: ''
+      Listeners:
+        -
+          InstancePort: 80
+          LoadBalancerPort: 80
+          Protocol: HTTP
+  LaunchConfig:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Properties:
+      ImageId: !Ref WorkerAMI
+      KeyName: mail_ape_production
+      SecurityGroups:
+        - ssh-access
+        - web-access
+      InstanceType: t2.micro
+      IamInstanceProfile: !Ref InstanceProfile
+  WorkerGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    Properties:
+      LaunchConfigurationName: !Ref LaunchConfig
+      AvailabilityZones:
+        Fn::GetAZs: ''
+      MinSize: 1
+      MaxSize: 3
+      DesiredCapacity: 1
+      LoadBalancerNames:
+        - !Ref LoadBalancer
+Outputs:
+  LoadBalancerDNS:
+    Description: Load Balancer DNS name
+    Value: !GetAtt LoadBalancer.DNSName
+  AutoScalingGroupName:
+    Description: Auto Scaling Group name
+    Value: !Ref WorkerGroup

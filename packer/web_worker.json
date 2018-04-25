@@ -1,0 +1,81 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "django_db_password":"",
+    "django_db_host":"",
+    "django_secret":"",
+    "email_host":"",
+    "email_host_password":"",
+    "mail_ape_aws_key":"",
+    "mail_ape_secret_key":"",
+    "web_domain":""
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "us-west-2",
+      "source_ami": "ami-78b82400",
+      "instance_type": "t2.micro",
+      "ssh_username": "ubuntu",
+      "ami_name": "mailape-{{timestamp}}",
+      "tags": {
+        "project": "mailape"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "{{template_dir}}/../scripts/make_aws_directories.sh"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/../requirements.common.txt",
+      "destination": "/mailape/requirements.common.txt"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/../requirements.production.txt",
+      "destination": "/mailape/requirements.production.txt"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/../ubuntu",
+      "destination": "/mailape"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/../apache",
+      "destination": "/mailape"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/../django",
+      "destination": "/mailape"
+    },
+    {
+      "type": "shell",
+      "inline": "find /mailape/django -name '*.pyc' -delete"
+    },
+    {
+      "type": "shell",
+      "scripts": [
+        "{{template_dir}}/../scripts/install_all_packages.sh",
+        "{{template_dir}}/../scripts/configure_apache.sh",
+        "{{template_dir}}/../scripts/make_mailape_environment_ini.sh",
+        "{{template_dir}}/../scripts/configure_celery.sh"
+        ],
+      "environment_vars": [
+        "DJANGO_DB_HOST={{user `django_db_host`}}",
+        "DJANGO_DB_PASSWORD={{user `django_db_password`}}",
+        "DJANGO_SECRET={{user `django_secret`}}",
+        "EMAIL_HOST={{user `email_host`}}",
+        "EMAIL_HOST_PASSWORD={{user `email_host_password`}}",
+        "WEB_DOMAIN={{user `web_domain`}}"
+      ]
+    }
+  ]
+}

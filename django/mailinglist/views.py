@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
@@ -14,6 +15,8 @@ from mailinglist.permissions import CanUseMailingList
 from mailinglist.serializers import (MailingListSerializer,
                                      ReadOnlyEmailSubscriberSerializer,
                                      SubscriberSerializer)
+
+logger = logging.getLogger(__name__)
 
 
 class SubscribeToMailingListView(CreateView):
@@ -90,6 +93,7 @@ class MailingListDetailView(LoginRequiredMixin, UserCanUseMailingList,
 class MailingListListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
+        logger.info('log message.')
         return MailingList.objects.filter(owner=self.request.user)
 
 

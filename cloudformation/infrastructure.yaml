@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Mail Ape Infrastructure
+Parameters:
+  MasterDBPassword:
+    Description: Master Password for the RDS instance
+    Type: String
+Resources:
+  SSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: ssh-access
+      GroupDescription: permit ssh access
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+  WebSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: web-access
+      GroupDescription: permit web access
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+  DatabaseSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: db-access
+      GroupDescription: permit db access
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "5432"
+          ToPort: "5432"
+          CidrIp: "0.0.0.0/0"
+  DatabaseServer:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: mailape
+      DBInstanceClass: db.t2.micro
+      MasterUsername: master
+      MasterUserPassword: !Ref MasterDBPassword
+      Engine: postgres
+      AllocatedStorage: 20
+      PubliclyAccessible: true
+      VPCSecurityGroups:
+        - !GetAtt DatabaseSecurityGroup.GroupId
+  MailApeQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      QueueName: mailape-celery
+  SQSAccessRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        -
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action: "sqs:*"
+                Resource: !GetAtt MailApeQueue.Arn
+              -
+                Effect: Allow
+                Action: sqs:ListQueues
+                Resource: "*"
+  SQSClientInstance:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+        - !Ref SQSAccessRole
+Outputs:
+  DatabaseDNS:
+    Description: Public DNS of RDS database
+    Value: !GetAtt DatabaseServer.Endpoint.Address
+  SQSClientProfile:
+    Description: Instance Profile for EC2 instances that need SQS Access
+    Value: !GetAtt SQSClientInstance.Arn

@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.conf import settings
@@ -5,6 +6,8 @@ from django.db import models
 from django.urls import reverse
 
 from mailinglist import tasks
+
+logger = logging.getLogger(__name__)
 
 
 class MailingList(models.Model):
@@ -51,11 +54,13 @@ class Subscriber(models.Model):
         is_new = self._state.adding or force_insert
         super().save(force_insert=force_insert, force_update=force_update,
                      using=using, update_fields=update_fields)
+        logger.info("in save, this should be true. is_new:%s self.confirmed:%s" % (is_new, self.confirmed))
         if is_new and not self.confirmed:
             self.send_confirmation_email()
 
     def send_confirmation_email(self):
-            tasks.send_confirmation_email_to_subscriber.delay(self.id)
+        logger.info("about to queue confirmation email.")
+        tasks.send_confirmation_email_to_subscriber.delay(self.id)
 
 
 class Message(models.Model):

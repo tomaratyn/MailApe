@@ -1,0 +1,23 @@
+[Unit]
+Description=Celery Service
+After=network.target
+
+[Service]
+Type=forking
+User=www-data
+Group=www-data
+EnvironmentFile=/etc/mailape/celery.env
+WorkingDirectory=/mailape/django
+ExecStart=/bin/sh -c '/mailape/virtualenv/bin/celery multi start worker \
+    -A "config.celery:app" \
+    --logfile=/var/log/celery/%n%I.log --loglevel="INFO" \
+    --pidfile=/run/celery/%n.pid'
+ExecStop=/bin/sh -c '/mailape/virtualenv/bin/celery multi stopwait worker \
+    --pidfile=/run/celery/%n.pid'
+ExecReload=/bin/sh -c '/mailape/virtualenv/bin/celery multi restart worker \
+   -A "config.celery:app" \
+   --logfile=/var/log/celery/%n%I.log --loglevel="INFO" \
+   --pidfile=/run/celery/%n.pid'
+
+[Install]
+WantedBy=multi-user.target
