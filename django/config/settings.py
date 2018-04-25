@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'markdownify',
     'django_celery_results',
+    'rest_framework',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -141,7 +142,6 @@ MARKDOWNIFY_WHITELIST_TAGS = [
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-
 LOGIN_URL = 'user:login'
 LOGIN_REDIRECT_URL = 'mailinglist:mailinglist_list'
 LOGOUT_REDIRECT_URL = 'user:login'
@@ -157,3 +157,18 @@ EMAIL_HOST_USER = 'username'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '60/min',
+        'anon': '30/min',
+    },
+}

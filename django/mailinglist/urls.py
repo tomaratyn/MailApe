@@ -1,8 +1,9 @@
-from django.urls import path
+from django.urls import path, include
 
 from mailinglist import views
 
 app_name = 'mailinglist'
+
 
 urlpatterns = [
     path('',
@@ -36,5 +37,18 @@ urlpatterns = [
          name='create_message'),
     path('message/<uuid:pk>',
          views.MessageDetailView.as_view(),
-         name='view_message')
+         name='view_message'),
+
+    path('api/v1/mailing-list', views.MailingListCreateListView.as_view(),
+         name='api-mailing-list-list'),
+    path('api/v1/mailinglist/<uuid:pk>',
+         views.MailingListRetrieveUpdateDestroyView.as_view(),
+         name='api-mailing-list-detail'),
+    path('api/v1/mailinglist/<uuid:mailing_list_pk>/subscribers',
+         views.SubscriberListCreateView.as_view(),
+         name='api-subscriber-list'),
+    path('api/v1/subscriber/<uuid:pk>',
+         views.SubscriberRetrieveUpdateDestroyView.as_view(),
+         name='api-subscriber-detail'),
+
 ]
